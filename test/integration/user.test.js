@@ -1,5 +1,5 @@
 /*
-  This is a mocha integration test of the strap api.
+  This is a mocha integration test of KeystoneJS User model and api.
 */
 
 const rp = require('request-promise');
@@ -7,11 +7,11 @@ const assert = require('chai').assert;
 const user = {};
 
 before(function (done) {
-
+  done();
 });
 
 after(function (done) {
-
+  done();
 });
 
 describe('User', function() {
@@ -21,7 +21,7 @@ describe('User', function() {
 
       let options = {
         method: 'POST',
-        uri: strapi.config.url+'/auth/local/register',
+        uri: '/auth/local/register',
         resolveWithFullResponse: true,
         json: true,
         body: {
