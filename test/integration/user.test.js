@@ -13,6 +13,7 @@ require('dotenv').config();
 var keystone = require('keystone');
 var handlebars = require('express-handlebars');
 
+const LOCALHOST = 'http://localhost:3000';
 
 function sleep (ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
@@ -22,11 +23,12 @@ function sleep (ms) {
 before(async () => {
 	try {
 
-    await sleep(5000);
+    // Sleep to give the KeystoneJS server time to start.
+		await sleep(5000);
 
 		let options = {
 			method: 'GET',
-			uri: 'http://localhost:3000/',
+			uri: LOCALHOST,
 			resolveWithFullResponse: true,
 		};
 
@@ -55,79 +57,122 @@ after(function (done) {
 
 describe('User', function () {
 
-	describe('POST /auth/local/register - Create Test User', function () {
-		it('should return 200 status code', async () => {
+	let userId = '';
+
+	describe('GET /api/user/list - Get All Users', function () {
+		it('should return an array of users.', async () => {
 
 			let options = {
-				method: 'POST',
-				uri: '/auth/local/register',
-				resolveWithFullResponse: true,
+				method: 'GET',
+				uri: `${LOCALHOST}/api/users/list`,
+				// resolveWithFullResponse: true,
 				json: true,
-				body: {
-					_id: null,
-					username: 'Test User',
-					email: 'test@test.com',
-					password: '123456',
-				},
 			};
-      // let result = await rp(options);
-      // console.log(`result stringified: ${JSON.stringify(result,null,2)}`);
-      // assert.equal(result.statusCode, 200);
-      // assert(result.statusCode === 200 || results.statusCode === 400, 'Creates new or reports already exists.');
-			assert(1, 1, 'Testing the test.');
+			let result = await rp(options);
+			// console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
+
+			userId = result.user[0]._id;
+			console.log(`userId captured: ${userId}`);
+
+			assert.isArray(result.user, 'User list is an array.');
 		});
 	});
 
-  /*
-  describe('POST /auth/local - Log in as user', function() {
-    it('should return 200 status code', async () => {
+	describe('GET /api/user/:id - Get Specific User', function () {
+		it('should return an object with a single user.', async () => {
 
-      try {
-        let options = {
-          method: 'POST',
-          uri: strapi.config.url+'/auth/local',
-          resolveWithFullResponse: true,
-          json: true,
-          body: {
-            identifier: 'test@test.com',
-            password: '123456'
-          }
-        };
+			let options = {
+				method: 'GET',
+				uri: `${LOCALHOST}/api/users/${userId}`,
+				// resolveWithFullResponse: true,
+				json: true,
+			};
+			let result = await rp(options);
 
-        let result = await rp(options);
-        console.log(`result stringified: ${JSON.stringify(result,null,2)}`);
-        user.id = result.body.user._id;
-        user.jwt = result.body.jwt;
-        //assert.equal(result.statusCode, 200);
-        assert(result.statusCode === 200 || results.statusCode === 400, 'Creates new or reports already exists.');
-      } catch(err) {
-        console.error('Error caught and stringified: '+JSON.stringify(err,null,2));
-      }
-    });
-  });
+			assert(result.user._id, userId, 'User IDs match.');
+		});
+	});
 
 
-  describe('DELETE /user/:id', function() {
-    it('should return 401 status code', async () => {
+	describe('POST /api/users/:id/update - Update Test User', function () {
+		it('First name should be changed.', async () => {
+			try {
+				let options = {
+					method: 'POST',
+					uri: `${LOCALHOST}/api/users/${userId}/update`,
+					resolveWithFullResponse: true,
+					json: true,
+					body: {
+						name: {
+							first: 'Test',
+							last: 'User',
+						},
+					},
+				};
+				let result = await rp(options);
+				// console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
+				assert(result.body.user.name.first, 'Test', 'User name was changed.');
 
-      //console.log(`strapi plugins: ${JSON.stringify(strapi.plugins,null,2)}`);
-      console.log(`UserId: ${user.id}`);
+			} catch (err) {
+				console.log(`err stringified: ${JSON.stringify(err, null, 2)}`);
+				throw err;
+			}
+		});
+	});
 
-      let options = {
-        method: 'DELETE',
-        uri: strapi.config.url+`/user/${user.id}`,
-        resolveWithFullResponse: true,
-        //json: true,
-        //body: {
-        //}
-        headers: {
-          Authorization: `Bearer ${user.jwt}`
-        }
-      };
-      let result = await rp(options);
-      console.log(`result stringified: ${JSON.stringify(result,null,2)}`);
-      assert.equal(result.statusCode, 401);
-    });
-  });
-  */
+
+	describe('POST /api/users/create - Create New User', function () {
+		it('Create New User', async () => {
+			try {
+				let options = {
+					method: 'POST',
+					uri: `${LOCALHOST}/api/users/create`,
+					resolveWithFullResponse: true,
+					json: true,
+					body: {
+						email: 'test.user@keystone.js',
+						password: 'testpassword',
+						name: {
+							first: 'Test2',
+							last: 'User2',
+						},
+					},
+				};
+				let result = await rp(options);
+
+				// console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
+
+				userId = result.body.user._id;
+
+				// assert('Test', 'Test', 'User name was changed.');
+				assert.isString(userId, `New user ${userId} created.`);
+
+			} catch (err) {
+				console.log(`err stringified: ${JSON.stringify(err, null, 2)}`);
+				throw err;
+			}
+		});
+	});
+
+
+	describe('GET /api/users/:id/remove - Delete Test User', function () {
+		it('should return success == true', async () => {
+			try {
+				let options = {
+					method: 'GET',
+					uri: `${LOCALHOST}/api/users/${userId}/remove`,
+					resolveWithFullResponse: true,
+					json: true,
+				};
+				let result = await rp(options);
+				// console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
+
+				assert(result.body.success, true, 'Remove returns success.');
+			} catch (err) {
+				console.log(`err stringified: ${JSON.stringify(err, null, 2)}`);
+				throw err;
+			}
+		});
+	});
+
 });
