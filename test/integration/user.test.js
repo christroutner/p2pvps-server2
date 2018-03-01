@@ -55,7 +55,7 @@ after(function (done) {
 	done();
 });
 
-describe('User', function () {
+describe('Non-Logged In User', function () {
 
 	let userId = '';
 
@@ -94,6 +94,34 @@ describe('User', function () {
 	});
 
 
+	describe('POST /api/users/:id/update - Update Should Fail', function () {
+		it('Should fail to update user account.', async () => {
+			try {
+				let options = {
+					method: 'POST',
+					uri: `${LOCALHOST}/api/users/${userId}/update`,
+					resolveWithFullResponse: true,
+					json: true,
+					body: {
+						name: {
+							first: 'Test',
+							last: 'User',
+						},
+					},
+				};
+				let result = await rp(options);
+
+				console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
+				assert(0, 1, 'This code should not be executed.');
+
+			} catch (err) {
+				assert(err.statusCode, 500, 'Non-logged in users can not update user accounts.');
+			}
+		});
+	});
+
+/*
+
 	describe('POST /api/users/:id/update - Update Test User', function () {
 		it('First name should be changed.', async () => {
 			try {
@@ -120,6 +148,7 @@ describe('User', function () {
 		});
 	});
 
+*/
 
 	describe('POST /api/users/create - Create New User', function () {
 		it('Create New User', async () => {
@@ -156,6 +185,29 @@ describe('User', function () {
 
 
 	describe('GET /api/users/:id/remove - Delete Test User', function () {
+		it('Should not be able to delete a user.', async () => {
+			try {
+				let options = {
+					method: 'GET',
+					uri: `${LOCALHOST}/api/users/${userId}/remove`,
+					resolveWithFullResponse: true,
+					json: true,
+				};
+				let result = await rp(options);
+				// console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
+
+        console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
+				assert(0, 1, 'This code should not be executed.');
+
+			} catch (err) {
+				assert(err.statusCode, 500, 'Non-logged in users can not update user accounts.');
+			}
+		});
+	});
+
+/*
+
+	describe('GET /api/users/:id/remove - Delete Test User', function () {
 		it('should return success == true', async () => {
 			try {
 				let options = {
@@ -174,5 +226,7 @@ describe('User', function () {
 			}
 		});
 	});
+
+*/
 
 });

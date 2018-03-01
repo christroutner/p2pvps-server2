@@ -6,9 +6,7 @@ var security = keystone.security;
 
 // debugger;
 
-/**
- * List User
- */
+// List Users
 exports.list = function (req, res) {
 
 	User.model.find(function (err, items) {
@@ -76,8 +74,9 @@ exports.create = function (req, res) {
  */
 
 exports.update = function (req, res) {
-	debugger;
+	// debugger;
 
+	try {
 
   // var keystonereq = req.keystone;
 	// if (!security.csrf.validate(req)) {
@@ -87,35 +86,36 @@ exports.update = function (req, res) {
   // Retrieve the list of superusers saved in keystone.js
 	// var superusers = keystone.get('superusers');
 
-  // Ensure the user making the request is either the user being changed or a superuser.
-  // Reject normal admins or users maliciously trying to change other users settings.
-	// var userId = req.user.get('id');
-	// if (userId != req.params.id) {
-	//	if (superusers.indexOf(userId) == -1) {
-	//		return res.apiError(403, 'Not allowed to change this user settings.');
-	//	}
-	// }
+		// Ensure the user making the request is either the user being changed or a superuser.
+		// Reject normal admins or users maliciously trying to change other users settings.
+		const userId = req.user.get('id');
+		if (userId !== req.params.id) {
+			return res.apiError(403, 'Not allowed to change this user settings.');
+		}
 
-	console.log(`lookup id: ${req.params.id}`);
+		console.log(`lookup id: ${req.params.id}`);
 
-	User.model.findById(req.params.id).exec(function (err, item) {
-		debugger;
-		if (err) return res.apiError('database error', err);
-		if (!item) return res.apiError('not found');
+		User.model.findById(req.params.id).exec(function (err, item) {
+		// debugger;
+			if (err) return res.apiError('database error', err);
+			if (!item) return res.apiError('not found');
 
-		var data = (req.method === 'POST') ? req.body : req.query;
+			var data = (req.method === 'POST') ? req.body : req.query;
 
-		item.getUpdateHandler(req).process(data, function (err) {
+			item.getUpdateHandler(req).process(data, function (err) {
 
-			if (err) return res.apiError('create error', err);
+				if (err) return res.apiError('create error', err);
 
-			res.apiResponse({
-				user: item,
+				res.apiResponse({
+					user: item,
+				});
+
 			});
 
 		});
-
-	});
+	} catch (err) {
+		return res.apiError(403, 'Not allowed to change this user settings.');
+	}
 };
 
 
@@ -124,18 +124,31 @@ exports.update = function (req, res) {
  */
 
 exports.remove = function (req, res) {
-	User.model.findById(req.params.id).exec(function (err, item) {
 
-		if (err) return res.apiError('database error', err);
-		if (!item) return res.apiError('not found');
+	try {
+		// Ensure the user making the request is either the user being changed or a superuser.
+		// Reject normal admins or users maliciously trying to change other users settings.
+		const userId = req.user.get('id');
+		if (userId !== req.params.id) {
+			return res.apiError(403, 'Not allowed to change this user settings.');
+		}
 
-		item.remove(function (err) {
+		User.model.findById(req.params.id).exec(function (err, item) {
+
 			if (err) return res.apiError('database error', err);
+			if (!item) return res.apiError('not found');
 
-			return res.apiResponse({
-				success: true,
+			item.remove(function (err) {
+				if (err) return res.apiError('database error', err);
+
+				return res.apiResponse({
+					success: true,
+				});
 			});
-		});
 
-	});
+		});
+		
+	} catch (err) {
+		return res.apiError(403, 'Not allowed to change this user settings.');
+	}
 };
