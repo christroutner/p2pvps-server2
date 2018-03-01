@@ -14,9 +14,24 @@ var keystone = require('keystone');
 var handlebars = require('express-handlebars');
 
 const LOCALHOST = 'http://localhost:3000';
+let csrf;
 
 function sleep (ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// This function retrieves the csrf from the body data.
+function getCSRF (cookie) {
+	console.log(`cookie: ${JSON.stringify(cookie, null, 2)}`);
+
+	for (var i = 0; i < cookie.length; i++) {
+		var thisCookie = cookie[i];
+		if (thisCookie.indexOf('XSRF-TOKEN') > -1) {
+			csrf = thisCookie.slice(11, 61);
+			console.log('csrf: ' + csrf);
+			break;
+		}
+	}
 }
 
 // Make sure the KeystoneJS server is running before executing tests.
@@ -28,13 +43,16 @@ before(async () => {
 
 		let options = {
 			method: 'GET',
-			uri: LOCALHOST,
+			uri: LOCALHOST + '/keystone/signin',
 			resolveWithFullResponse: true,
 		};
 
 		const result = await rp(options);
 
-	// console.log('result: ' + JSON.stringify(result, null, 2));
+		getCSRF(result.headers['set-cookie']);
+
+
+		//console.log('result: ' + JSON.stringify(result, null, 2));
 
 		if (result.statusCode !== 200)
 		{
@@ -196,7 +214,7 @@ describe('Non-Logged In User', function () {
 				let result = await rp(options);
 				// console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
 
-        console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
+				console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
 				assert(0, 1, 'This code should not be executed.');
 
 			} catch (err) {
@@ -228,5 +246,36 @@ describe('Non-Logged In User', function () {
 	});
 
 */
+
+});
+
+describe('Logged In User', function () {
+
+	let userId = '';
+
+	describe('POST /keystone/api/session/signin - Log In User', function () {
+		it('Should log in.', async () => {
+			try {
+				let options = {
+					method: 'POST',
+					uri: `${LOCALHOST}/keystone/api/session/signin`,
+					resolveWithFullResponse: true,
+					json: true,
+					body: {
+						email: 'test.user@keystone.js',
+						password: 'testpassword',
+					},
+				};
+				let result = await rp(options);
+				console.log(`result stringified: ${JSON.stringify(result, null, 2)}`);
+				assert(result.success, true, 'User name was changed.');
+
+			} catch (err) {
+				console.log(`err stringified: ${JSON.stringify(err, null, 2)}`);
+				throw err;
+			}
+		});
+	});
+
 
 });
