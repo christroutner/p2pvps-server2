@@ -1,29 +1,29 @@
 {
-  "name": "p2pvps-server2",
-  "version": "0.0.0",
-  "private": true,
-  "dependencies": {
-    "async": "2.1.4",
-    "cloudinary": "1.7.0",
-    "dotenv": "4.0.0",
-    "express-handlebars": "3.0.0",
-    "handlebars": "4.0.6",
-    "keystone": "4.0.0-beta.5",
-    "lodash": "^4.13.1",
-    "moment": "2.17.1",
-    "request": "^2.83.0",
-    "request-promise": "^4.2.2"
-  },
-  "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "3.15.0",
-    "eslint-config-keystone": "^3.0.0",
-    "eslint-plugin-react": "^5.1.1",
-    "mocha": "^5.0.1"
-  },
-  "scripts": {
-    "lint": "eslint .",
-    "start": "node keystone.js",
-    "test": "mocha --timeout 15000 test/**/*.test.js"
-  }
+	"name": "p2pvps-server2",
+	"version": "0.0.0",
+	"private": true,
+	"dependencies": {
+		"async": "2.1.4",
+		"cloudinary": "1.7.0",
+		"dotenv": "4.0.0",
+		"express-handlebars": "3.0.0",
+		"handlebars": "4.0.6",
+		"keystone": "4.0.0-beta.5",
+		"lodash": "^4.13.1",
+		"moment": "2.17.1",
+		"request": "^2.83.0",
+		"request-promise": "^4.2.2"
+	},
+	"devDependencies": {
+		"chai": "^4.1.2",
+		"eslint": "3.15.0",
+		"eslint-config-keystone": "^3.0.0",
+		"eslint-plugin-react": "^5.1.1",
+		"mocha": "^5.0.1"
+	},
+	"scripts": {
+		"lint": "eslint .",
+		"start": "node keystone.js &",
+		"test": "npm start && mocha --timeout 15000 test/**/*.test.js"
+	}
 }
